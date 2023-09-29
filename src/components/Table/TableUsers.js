@@ -1,7 +1,7 @@
 // import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 import Table from 'react-bootstrap/Table';
-import { fetchAllUser } from '../Services/UserService';
+import { fetchAllUser } from '../../Services/UserService';
 import ReactPaginate from 'react-paginate';
 
 
