@@ -6,7 +6,8 @@ import ReactPaginate from 'react-paginate';
 import ModalAddNewUser from '../Modals/ModalAddNewUser'
 import ModalEditUser from '../Modals/ModalEditUser';
 import ModalConfirm from '../Modals/ModalConfirm';
-import _ from 'lodash'
+import _, { debounce } from 'lodash'
+import { CSVDownload, CSVLink } from 'react-csv';
 
 export default function TableUsers() {
 
@@ -18,6 +19,9 @@ export default function TableUsers() {
   const [isShowModalEdit, setIsShowModalEdit] = useState(false)
   const [dataUserDelete, setDataUserDelete] = useState({})
   const [isShowModalDelete, setIsShowModalDelete] = useState(false)
+  const [sortBy, setSortBy] = useState('asc')
+  const [sortField, setSortField] = useState('id')
+  // const [keyword, setKeyword] = useState('')
 
 
   const handleClose = () => {
@@ -64,18 +68,94 @@ export default function TableUsers() {
     setDataUserDelete(user)
   }
 
+  const handleDeleteUserFromModal = (user) => {
+    let cloneListUser = _.cloneDeep(listUsers)
+    cloneListUser = cloneListUser.filter(item => item.id !== user.id)
+    setListUsers(cloneListUser)
+  }
+
+  const handleSort = (sortBy, sortField) => {
+    setSortBy(sortBy);
+    setSortField(sortField)
+    let cloneListUser = _.cloneDeep(listUsers)
+    cloneListUser = _.orderBy(cloneListUser, [sortField], [sortBy])
+    setListUsers(cloneListUser)
+  }
+
+  const handleSearch = debounce((e) => {
+    let term = e.target.value
+    if (term) {
+      let cloneListUser = _.cloneDeep(listUsers);
+      cloneListUser = cloneListUser.filter(item => item.email.includes(term))
+      setListUsers(cloneListUser)
+    } else {
+      getUsers(1)
+    }
+  }, 500)
+
+  const csvData = []
+
   return (
     <>
       <div className="my-3 d-flex align-items-center justify-content-between">
         <strong>List User:</strong>
-        <button className='btn btn-primary' onClick={() => setIsShowModalAddNew(true)}>Add New User</button>
+        <div className="download">
+          <input type="file" id='import' hidden />
+          <label htmlFor='import' className='btn btn-success'>
+            <i class="fa-solid fa-file-import"></i> Import
+          </label>
+          <CSVLink
+            data={csvData}
+            filename={'my-file.csv'}
+            className='btn btn-secondary mx-2'
+          >
+            <i class="fa-solid fa-file-export"></i> Export
+          </CSVLink>
+          <button
+            className='btn btn-primary'
+            onClick={() => setIsShowModalAddNew(true)}
+          >
+            <i className="fa-solid fa-circle-plus"></i> Add New
+          </button>
+        </div>
+      </div>
+      <div className='col-4 my-3'>
+        <input
+          type="text"
+          placeholder='Search user by email...'
+          className='form-control'
+          onChange={(e) => handleSearch(e)}
+        />
       </div>
       <Table striped bordered hover>
         <thead>
           <tr>
-            <th>ID</th>
+            <th className='d-flex align-items-center justify-content-between'>
+              <span>ID</span>
+              <span>
+                <i
+                  className="fa-solid fa-arrow-up-long mx-1"
+                  onClick={() => handleSort('asc', 'id')}
+                ></i>
+                <i
+                  className="fa-solid fa-arrow-down-long"
+                  onClick={() => handleSort('desc', 'id')}
+                ></i>
+              </span>
+            </th>
             <th>Email</th>
-            <th>First Name</th>
+            <th className='d-flex align-items-center justify-content-between'>
+              <span>First Name</span>
+              <span>
+                <i
+                  className="fa-solid fa-arrow-up-long mx-1"
+                  onClick={() => handleSort('asc', 'first_name')}
+                ></i>
+                <i
+                  className="fa-solid fa-arrow-down-long"
+                  onClick={() => handleSort('desc', 'first_name')}
+                ></i>
+              </span></th>
             <th>Last Name</th>
             <th>Action</th>
           </tr>
@@ -93,13 +173,13 @@ export default function TableUsers() {
                     className='btn btn-warning mx-3'
                     onClick={() => handleEditUser(item)}
                   >
-                    Edit
+                    <i class="fa-solid fa-pen"></i> Edit
                   </button>
                   <button
                     className='btn btn-danger'
                     onClick={() => handleDeleteUser(item)}
                   >
-                    Delete
+                    <i class="fa-solid fa-trash"></i> Delete
                   </button>
                 </td>
               </tr>
@@ -107,24 +187,26 @@ export default function TableUsers() {
           })}
         </tbody>
       </Table>
-      <ReactPaginate
-        breakLabel="..."
-        nextLabel="next >"
-        onPageChange={handlePageClick}
-        pageRangeDisplayed={3}
-        pageCount={totalPages}
-        previousLabel="< previous"
-        pageClassName='page-item'
-        pageLinkClassName='page-link'
-        previousClassName='page-item'
-        previousLinkClassName='page-link'
-        nextClassName='page-item'
-        nextLinkClassName='page-link'
-        breakClassName='page-item'
-        breakLinkClassName='page-link'
-        containerClassName='pagination'
-        activeClassName='active'
-      />
+      <div className='d-flex justify-content-center'>
+        <ReactPaginate
+          breakLabel="..."
+          nextLabel="next >"
+          onPageChange={handlePageClick}
+          pageRangeDisplayed={3}
+          pageCount={totalPages}
+          previousLabel="< previous"
+          pageClassName='page-item'
+          pageLinkClassName='page-link'
+          previousClassName='page-item'
+          previousLinkClassName='page-link'
+          nextClassName='page-item'
+          nextLinkClassName='page-link'
+          breakClassName='page-item'
+          breakLinkClassName='page-link'
+          containerClassName='pagination'
+          activeClassName='active'
+        />
+      </div>
       <ModalAddNewUser
         show={isShowModalAddNew}
         handleClose={handleClose}
@@ -140,6 +222,7 @@ export default function TableUsers() {
         show={isShowModalDelete}
         handleClose={handleClose}
         dataUserDelete={dataUserDelete}
+        handleDeleteUserFromModal={handleDeleteUserFromModal}
       />
     </>
   )
