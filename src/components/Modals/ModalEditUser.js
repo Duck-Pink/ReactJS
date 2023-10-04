@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
+import { toast } from 'react-toastify';
+
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { putUpdateUser } from '../../Services/UserService';
-import { toast } from 'react-toastify';
 
 export default function ModalEditUser(props) {
   const { show, handleClose, dataUserEdit, handleEditUserFromModal } = props
@@ -11,6 +12,7 @@ export default function ModalEditUser(props) {
 
   const handleEditUser = async () => {
     let res = await putUpdateUser(name, job)
+    // console.log(name, job)
     if (res && res.updatedAt) {
       handleEditUserFromModal({ first_name: name, id: dataUserEdit.id })
       handleClose();
@@ -23,6 +25,7 @@ export default function ModalEditUser(props) {
       setName(dataUserEdit.first_name)
     }
   }, [dataUserEdit])
+
   return (
     <>
       <Modal show={show} onHide={handleClose} backdrop='static' keyboard={false}>

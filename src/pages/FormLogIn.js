@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react'
-import '../App.scss'
+import React, { useContext, useState } from 'react'
 import { toast } from 'react-toastify';
-import { loginApi } from '../Services/UserService';
 import { useNavigate } from 'react-router-dom';
+import '../App.scss'
+
+import { loginApi } from '../Services/UserService';
+import { UserContext } from '../context/UserContext';
 
 export default function FormLogIn() {
   const [email, setEmail] = useState('');
@@ -10,22 +12,18 @@ export default function FormLogIn() {
   const [isShowPassword, setIsShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useContext(UserContext)
 
-  useEffect(() => {
-    let token = localStorage.getItem('token');
-    if (token) {
-      navigate('/')
-    }
-  }, [])
+
   const handleLogin = async () => {
     if (!email || !password) {
       toast.error("Email/Password is required")
       return
     }
     setLoading(true)
-    let res = await loginApi(email, password)
+    let res = await loginApi(email.trim(), password)
     if (res && res.token) {
-      localStorage.setItem('token', res.token)
+      login(email, res.token)
       navigate('/')
     } else {
       if (res && res.status === 400) {
@@ -33,6 +31,12 @@ export default function FormLogIn() {
       }
     }
     setLoading(false)
+  }
+
+  const handlePressEnter = async (e) => {
+    if (e && e.key === 'Enter') {
+      await handleLogin()
+    }
   }
 
   return (
@@ -54,15 +58,16 @@ export default function FormLogIn() {
           className='input'
           type={isShowPassword === true ? "type" : 'password'}
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
           placeholder='Password...'
+          onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={(e) => handlePressEnter(e)}
         />
         <i
           className={isShowPassword === true ? "fa-regular fa-eye-slash" : "fa-regular fa-eye"}
           onClick={() => setIsShowPassword(!isShowPassword)}
         ></i>
       </div>
-      <p>Forgot Password?</p>
+      {/* <p>Forgot Password?</p> */}
       <button
         className={email && password ? 'active' : ''}
         disabled={email && password ? false : true}
@@ -70,7 +75,10 @@ export default function FormLogIn() {
       >
         {loading && <i className="fas fa-circle-notch fa-spin"></i>} &nbsp;Log in
       </button>
-      <div className='back'><i className="fa-solid fa-angles-left"></i> Go Back</div>
+      <div className='back'>
+        <i className="fa-solid fa-angles-left"></i>
+        <span onClick={() => navigate('/')}> &nbsp;Go Back</span>
+      </div>
     </div>
   )
 }

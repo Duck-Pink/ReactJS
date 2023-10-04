@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { toast } from 'react-toastify';
+
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { postCreateUser } from '../../Services/UserService';
-import { toast } from 'react-toastify'
 
 function ModalAddNewUser(props) {
   const { show, handleClose, handleUpdateUser } = props
